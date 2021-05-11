@@ -55,7 +55,7 @@ export default class Correct_40 {
             if (data_.length > num) {
                 let data_ = data_.slice(0, num);
                 resData.push(data_);
-                let reduceDatas = data_.slice(num + 1);
+                let reduceDatas = data_.slice(num);
                 callBack(reduceDatas, num);
             } else {
                 resData.push(data);
