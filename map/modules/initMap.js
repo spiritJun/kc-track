@@ -48,14 +48,17 @@ export default class InitMap {
             console.log(err);
         }
     }
-    _initMap (center = [116.397428, 39.90923]) {
+    _initMap (center, zoom) {
+        center = center || [116.397428, 39.90923];
+        zoom = zoom || 14;
+        // console.log(center,zoom);
         return new Promise((resolve, reject) => {
             this.MapUILoader().then(AMap => {
                 let map = new AMap.Map(this.el, {
                     autoRotation: true,
                     resizeEnable: true,
                     center,//设置地图中心点坐标 默认定位到皇宫
-                    zoom: 14,
+                    zoom,
                 });
                 //地图绘制成功
                 map.on('complete', () => {

@@ -23,6 +23,8 @@ import DrawLines from './modules/drawLines';//画线
  *    correctOnce (新增 callBack) -- 纠偏一次就抛出一次的方法
  *    correctAllEnd(新增 callBack) -- 纠偏完成的回调
  *    movingEnd(新增 callback) --小车本次移动结束了的回调
+ *    initPoint(新增) -- 设置地图初始化时的中心点
+ *    initZoom(新增) -- 设置地图初始化时zoom级别
  * }
  * __proto__ ==>{
  *    pushDataEnd -- callback 推送结束了
@@ -32,6 +34,7 @@ import DrawLines from './modules/drawLines';//画线
  *    resetMap --callback 重置地图 恢复初始化状态 定位到皇宫
  *    currentTrack --callback实时轨迹开始
  *    locationToAddress --callback将经纬度反编译成地址 
+ *    addressTolocation --callback将地址反编译为经纬度
  *    showMarker --展示图标
  *    renderAMapLngLat  -- 将经纬度编译成高德地图经纬度
  *    correctLine -- 公共纠偏的方法 500个点的纠偏
@@ -39,6 +42,7 @@ import DrawLines from './modules/drawLines';//画线
  *    drawLine(新增) -- 画线封装
  *    trackPlayRealTime(新增) --动态轨迹动画 一直跑 
  *    realTimeMoving(新增) --当小车暂停后继续跑 
+ *    setZoomCenter(新增) --将设置中心点和zoom级别抛出
  * }
  */
 const correctTypeObj = {
@@ -69,9 +73,9 @@ export default class TrackFactory {
     //初始化函数
     async _init () {
         try {
-            const { el, key } = this.props;
+            const { el, key, initPoint, initZoom } = this.props;
             const map = new InitMap({ el, key });
-            this.map = await map._initMap().catch(err => {
+            this.map = await map._initMap(initPoint, initZoom).catch(err => {
                 this.props.initError && this.props.initError(err);
             });
             this.props.initCreated && this.props.initCreated(this.map);
@@ -225,7 +229,7 @@ export default class TrackFactory {
         })
     }
     //地图清除轨迹和小车等等一切的一切 恢复初始化状态 地图不要给干掉哦~
-    resetMap () {
+    resetMap (isResetMap) {
         this.drawLineInstance = null;//画线实例
         this.trackPlayInstance = null;//轨迹播放实例对象
         this.RealTimeTrack = null;//实时轨迹播放实例对象
@@ -235,7 +239,8 @@ export default class TrackFactory {
         this.isCorrectEnd = false;//最后一次纠偏完成了
         window.setTimeout && clearTimeout(window.setTimeout);//清空所有定时器
         this.map.clearMap();
-        this.map.setZoomAndCenter(14, [116.397428, 39.90923]);//默认定位到皇宫
+        // this.map.setZoomAndCenter(14, [116.397428, 39.90923]);//默认定位到皇宫
+        !isResetMap && this.setZoomCenter();//默认定位到皇宫
     }
     //实时轨迹开始方法
     //correctType -- (新增 纠偏类型)(2 --两点间 500 --500个点 0--不纠偏)
@@ -285,6 +290,21 @@ export default class TrackFactory {
                         res(address);
                     } else {
                         rej('根据经纬度查询地址失败');
+                    }
+                })
+            })
+        })
+    }
+    //将地址反编译为经纬度
+    addressTolocation (address) {
+        return new Promise((res, rej) => {
+            AMap.plugin('AMap.Geocoder', () => {
+                let geocoder = new window.AMap.Geocoder();
+                geocoder.getLocation(address, (status, result) => {
+                    if (status === 'complete' && result.geocodes.length) {
+                        res(result.geocodes[0].location);
+                    } else {
+                        rej('根据地址查询经纬度失败');
                     }
                 })
             })
@@ -397,6 +417,10 @@ export default class TrackFactory {
         //通知实例将要画完
         this.isCorrectEnd = true;
         this.drawLineInstance.correctEndCall();
+    }
+    //设置中心点以及zoom级别
+    setZoomCenter (zoom = 14, center = [116.397428, 39.90923]) {
+        this.map.setZoomAndCenter(zoom, center);
     }
 
 }
