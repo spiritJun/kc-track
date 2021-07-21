@@ -43,6 +43,7 @@ import DrawLines from './modules/drawLines';//画线
  *    trackPlayRealTime(新增) --动态轨迹动画 一直跑 
  *    realTimeMoving(新增) --当小车暂停后继续跑 
  *    setZoomCenter(新增) --将设置中心点和zoom级别抛出
+ *    renderInfoWindow(新增) --渲染信息窗口(很重要 不要设置marker因为有复制的问题)
  * }
  */
 const correctTypeObj = {
@@ -85,7 +86,7 @@ export default class TrackFactory {
     }
     mapDestroy () {
         //地图实例销毁 
-        this.map.destroy();
+        this.map && this.map.destroy();
     }
     //画线吧 小伙儿
     drawLine ({ data = [], strokeObj = null }) {
@@ -238,7 +239,7 @@ export default class TrackFactory {
         this.suspendDriving = false;//暂停小车移动
         this.isCorrectEnd = false;//最后一次纠偏完成了
         window.setTimeout && clearTimeout(window.setTimeout);//清空所有定时器
-        this.map.clearMap();
+        this.map && this.map.clearMap();
         // this.map.setZoomAndCenter(14, [116.397428, 39.90923]);//默认定位到皇宫
         !isResetMap && this.setZoomCenter();//默认定位到皇宫
     }
@@ -420,7 +421,29 @@ export default class TrackFactory {
     }
     //设置中心点以及zoom级别
     setZoomCenter (zoom = 14, center = [116.397428, 39.90923]) {
-        this.map.setZoomAndCenter(zoom, center);
+        this.map && this.map.setZoomAndCenter(zoom, center);
+    }
+    //渲染信息窗口(默认全是自定义)
+    renderInfoWindow ({
+        isCustom = true,
+        offset = [50, 30],
+        anchor = 'middle-left',
+        content = ''
+    }) {
+        return new Promise((resolve, reject) => {
+            let interView = new window.AMap.InfoWindow({
+                isCustom,
+                offset: new window.AMap.Pixel(...offset),
+                anchor,
+            });
+            interView.setContent(content);
+            // interView.open(this.map);
+            if (interView) {
+                resolve(interView);
+            } else {
+                reject('interWindow加载失败！');
+            }
+        })
     }
 
 }
