@@ -110,8 +110,8 @@ export default class TrackFactory {
                     map: this.map,
                     isShowEnd,
                     data,
-                    correctOnce: (data) => {
-                        this.props.correctOnce(data);
+                    correctOnce: (data, orgData) => {
+                        this.props.correctOnce(data, orgData);
                     },
                     correctAllEnd: (lastPoint) => {
                         this.props.correctAllEnd(lastPoint);
@@ -257,8 +257,8 @@ export default class TrackFactory {
                         isShowEnd,
                         data,
                         AMap: window.AMap,
-                        correctOnce: (data) => {
-                            this.props.correctOnceRealTime(data);
+                        correctOnce: (data, orgData) => {
+                            this.props.correctOnceRealTime(data, orgData);
                         },
                         // correctAllEnd: (lastPoint) => {
                         //     // this.props.correctAllEnd(lastPoint);
@@ -312,7 +312,7 @@ export default class TrackFactory {
         })
     }
     //在地图中展示Marker
-    showMarker ({ image = '', size = [19, 31], location = { x: 0, y: 0 }, isFitView = false, params = {} }) {
+    showMarker ({ image = '', size = [19, 31], content = '', location = { x: 0, y: 0 }, zIndex = 1, isFitView = false, params = {} }) {
         return new Promise((resolve, reject) => {
             let icon = new window.AMap.Icon({
                 image,
@@ -324,8 +324,9 @@ export default class TrackFactory {
             let marker = new window.AMap.Marker({
                 map: this.map,
                 icon,
+                content,
                 position,
-                zIndex: 1,
+                zIndex,
                 ...params
             });
             marker.setMap(this.map);

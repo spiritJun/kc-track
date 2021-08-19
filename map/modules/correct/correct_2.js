@@ -41,7 +41,7 @@ export default class Correct_2 {
                 paths.push([data[i].lon * 1, data[i].lat * 1]);
                 // paths.push(new this.props.AMap.LngLat(data[i - 1].lon * 1, data[i - 1].lat * 1));
                 // paths.push(new this.props.AMap.LngLat(data[i].lon * 1, data[i].lat * 1));
-                const result = await this._betweenTwoPoints(paths);
+                const result = await this._betweenTwoPoints(paths, [data[i - 1], data[i]]);
                 if (i == data.length - 1) {
                     if (this.isCorrectEnd && this.props.isShowEnd && this.deepNum == deepNum) {
                         this.props.correctAllEnd && this.props.correctAllEnd(result[result.length - 1]);
@@ -54,7 +54,7 @@ export default class Correct_2 {
         }
     }
     //两点之间的推荐路线
-    _betweenTwoPoints (path) {
+    _betweenTwoPoints (path, orgData) {
         console.log(path);
         console.log('纠偏的原始点！');
         return new Promise((resolve, reject) => {
@@ -67,7 +67,7 @@ export default class Correct_2 {
                 if (status === 'complete') {
                     if (result.routes && result.routes.length) {
                         let arr = this._parseRouteToPath(result.routes[0]);
-                        this.props.correctOnce && this.props.correctOnce(arr);
+                        this.props.correctOnce && this.props.correctOnce(arr, orgData);
                         resolve(arr)
                     }
                 }
