@@ -1,11 +1,3 @@
-/*
- * @Description: 
- * @Author: Qinaj
- * @Date: 2021-04-15 11:56:34
- * @LastEditTime: 2022-06-13 21:30:11
- * @LastEditors: Qinaj
- * @FilePath: \lifeCoashd:\1trackGit\map\modules\initMap.js
- */
 /**
  * 初始化地图类
  */
@@ -13,9 +5,20 @@ export default class InitMap {
     constructor(props) {
         const key = props.key || 'your key';
         this.el = props.el;
+        const plugins = [
+            'AMap.TruckDriving',
+            'AMap.Scale',
+            'AMap.GraspRoad',
+            'AMap.LngLat',
+            'AMap.Driving',
+            'AMap.Geocoder',
+            'AMap.Autocomplete',
+            'AMap.PlaceSearch',
+            'AMap.MouseTool'
+        ]
         this.MapUrlArray = [
-            `https://webapi.amap.com/maps?v=1.4.15&callback=initAMap&key=${key}&plugin=AMap.TruckDriving,AMap.Scale,AMap.GraspRoad,AMap.LngLat,AMap.Driving,AMap.Geocoder,AMap.Autocomplete,AMap.PlaceSearch`,
-            'https://webapi.amap.com/ui/1.0/main.js'
+            `https://webapi.amap.com/maps?v=1.4.15&callback=initAMap&key=${key}&plugin=${plugins.join(',')}`,
+            'https://webapi.amap.com/ui/1.1/main.js'
         ];
     }
     createScriptAmp (url) {
@@ -56,7 +59,7 @@ export default class InitMap {
             console.log(err);
         }
     }
-    _initMap (center, zoom) {
+    _initMap (center, zoom, initParams = {}) {
         center = center || [116.397428, 39.90923];
         zoom = zoom || 14;
         // console.log(center,zoom);
@@ -67,6 +70,7 @@ export default class InitMap {
                     resizeEnable: true,
                     center,//设置地图中心点坐标 默认定位到皇宫
                     zoom,
+                    ...initParams
                 });
                 //地图绘制成功
                 map.on('complete', () => {

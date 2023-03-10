@@ -25,6 +25,7 @@ import DrawLines from './modules/drawLines';//画线
  *    movingEnd(新增 callback) --小车本次移动结束了的回调
  *    initPoint(新增) -- 设置地图初始化时的中心点
  *    initZoom(新增) -- 设置地图初始化时zoom级别
+ *    initParams(新增) -- 设置地图初始化其他参数
  * }
  * __proto__ ==>{
  *    pushDataEnd -- callback 推送结束了
@@ -74,14 +75,15 @@ export default class TrackFactory {
     //初始化函数
     async _init () {
         try {
-            const { el, key, initPoint, initZoom } = this.props;
+            const { el, key, initPoint, initZoom, initParams } = this.props;
             const map = new InitMap({ el, key });
-            this.map = await map._initMap(initPoint, initZoom).catch(err => {
+            this.map = await map._initMap(initPoint, initZoom, initParams).catch(err => {
                 this.props.initError && this.props.initError(err);
             });
             this.props.initCreated && this.props.initCreated(this.map);
         } catch (err) {
             this.props.initError && this.props.initError(err);
+            throw new Error(err || '地图加载失败')
         }
     }
     mapDestroy () {
