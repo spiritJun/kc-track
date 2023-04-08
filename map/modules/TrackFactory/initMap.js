@@ -3,7 +3,7 @@
  */
 export default class InitMap {
     constructor(props) {
-        const key = props.key || 'your key';
+        const key = props.key || '2fcc7431048d6f52c99d5d8954833dc7';
         this.el = props.el;
         const plugins = [
             'AMap.TruckDriving',
@@ -17,7 +17,7 @@ export default class InitMap {
             'AMap.MouseTool'
         ]
         this.MapUrlArray = [
-            `https://webapi.amap.com/maps?v=1.4.15&callback=initAMap&key=${key}&plugin=${plugins.join(',')}`,
+            `https://webapi.amap.com/maps?v=2.0&callback=initAMap&key=${key}&plugin=${plugins.join(',')}`,
             'https://webapi.amap.com/ui/1.1/main.js'
         ];
     }

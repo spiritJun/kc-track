@@ -1,5 +1,5 @@
-import TrackFactory from '../index'
-import { isVaildPolygon } from '../utils/cross'
+import TrackFactory from '../TrackFactory'
+import { isVaildPolygon } from './utils/cross'
 /**
  * 围栏类
  * props ==> {
@@ -20,6 +20,7 @@ import { isVaildPolygon } from '../utils/cross'
  *    getDrawConfig(新增) -- 返回给开发者配置选项 全部写活
  *    setMouseToolsPlugins(新增) -- 配置当前的矩形/圆形/多边形
  *    getDrawData(新增) -- 返回后端需要的数据~可拓展
+ *    isAreaIncludePoint(新增) --判断点是否在区域内
  * }
  *
  *
@@ -48,20 +49,26 @@ const mouseToolConfig = new Map([
         ]
     ]
 ])
-export default class EnClosure extends TrackFactory {
+export default class Enclosure extends TrackFactory {
     constructor(props) {
         super(props)
         this._init(props)
     }
     async _init(props) {
-        this.props = { ...props }
-        if (!this.props.el) {
-            this.props.initError && this.props.initError('参数不正确，缺少必要的挂载元素')
-            return false
-        } else {
-            await super._init()
-            this.mouseTool = new window.AMap.MouseTool(this.map) //此处map为父类属性
-            this.props.getMouseTool && this.props.getMouseTool(this.mouseTool)
+        try {
+            this.props = { ...props }
+            if (!this.props.el) {
+                this.props.initError && this.props.initError('参数不正确，缺少必要的挂载元素')
+                return false
+            } else {
+                await super._init()
+                if (this.props.getMouseTool) {
+                    this.mouseTool = new window.AMap.MouseTool(this.map) //此处map为父类属性
+                    this.props.getMouseTool && this.props.getMouseTool(this.mouseTool)
+                }
+            }
+        } catch (e) {
+            console.log(e)
         }
     }
     //初始化配置鼠标画图项
@@ -82,12 +89,14 @@ export default class EnClosure extends TrackFactory {
         const rectangleConfig = new window.AMap.Rectangle(params)
         this.map.add(rectangleConfig)
         this.map.setFitView()
+        return rectangleConfig
     }
     //设置圆形
     setCircle(params = {}) {
         const circleConfig = new window.AMap.Circle(params)
         this.map.add(circleConfig)
         this.map.setFitView()
+        return circleConfig
     }
     //返回MouseTool配置的key防止用户蒙蔽
     getDrawConfig() {
@@ -113,8 +122,51 @@ export default class EnClosure extends TrackFactory {
         console.log('绘制的是否交叉了？' + isVaildPolygon(pathPoints))
         return isVaildPolygon(pathPoints) || false
     }
+    //判断区域是否包含点 方法跟contains一样 很好 但是没啥用
+    isAreaIncludePoint(areaPoints, point) {
+        return window.AMap.GeometryUtil.isPointInRing(point, areaPoints)
+    }
+    //判断点是否在区域内，以及是否在区域的多远的范围 适用于矩形 多边形
+    /**
+     * @params {*areaPoints} 必传 区域的点集合
+     * @params {*searchLngLat} 必传 点标记
+     * @params {distance} 当前点在区域内的距离范围
+     */
+    getIsIncludes(areaPoints = [], searchLngLat = null, distance = 0) {
+        if (areaPoints.length && searchLngLat) {
+            for (let item of areaPoints) {
+                console.log(window.AMap.GeometryUtil.distance(item, searchLngLat), distance)
+                if (window.AMap.GeometryUtil.distance(item, searchLngLat) < distance) {
+                    return false
+                }
+            }
+            return true
+        } else {
+            throw new Error('areaPoints，searchLngLat参数必传')
+        }
+    }
+    //判断点是否在区域内，以及是否在区域的多远的范围 适用于圆形
+    /**
+     * @params {*radius} 必传 半径
+     * @params {*circlePoint} 必传 圆心
+     * @params {*searchLngLat} 必传 点标记
+     * @params {distance} 当前点在区域内的距离范围
+     */
+    getIsIncludesByCircle(radius = null, circlePoint = null, searchLngLat = null, distance = 0) {
+        if (radius && searchLngLat && circlePoint) {
+            console.log(radius - window.AMap.GeometryUtil.distance(circlePoint, searchLngLat))
+            if (radius - window.AMap.GeometryUtil.distance(circlePoint, searchLngLat) < distance) {
+                return false
+            }
+            return true
+        } else {
+            throw new Error('radius，searchLngLat参数必传')
+        }
+    }
     //获取多边形
     _getPolygonData(e = {}, searchLngLat = null) {
+        //测试
+        // const isIncludes = this.getIsIncludes(e.obj.getPath(),searchLngLat,2)
         const isIncludes = searchLngLat ? window.AMap.GeometryUtil.isPointInRing(searchLngLat, e.obj.getPath()) : false
         const path = e.obj.getPath()
         //单位平方米
@@ -133,6 +185,7 @@ export default class EnClosure extends TrackFactory {
     }
     //获取矩形
     _rectangleData(e = {}, searchLngLat = null) {
+        // this.getIsIncludes(e.obj.getPath(),searchLngLat)
         const bounds = e.obj.getBounds() //获取矩形实例
         const center = bounds.getCenter()
         const isIncludes = searchLngLat ? window.AMap.GeometryUtil.isPointInRing(searchLngLat, e.obj.getPath()) : false
@@ -163,7 +216,10 @@ export default class EnClosure extends TrackFactory {
         console.log(window.AMap.GeometryUtil.ringArea)
         //单位平方米
         const area = Math.floor(window.AMap.GeometryUtil.ringArea(e.obj.getPath()))
-        const isIncludes = searchLngLat ? window.AMap.GeometryUtil.isPointInRing(searchLngLat, e.obj.getPath()) : false
+        let isIncludes = searchLngLat ? window.AMap.GeometryUtil.isPointInRing(searchLngLat, e.obj.getPath()) : false
+        //测试
+        // const isIncludesDistance = this.getIsIncludes(e.obj.getPath(),searchLngLat,2)
+        // isIncludes = isIncludes && isIncludesDistance
         return {
             isIncludes,
             radius,
