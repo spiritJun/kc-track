@@ -3,7 +3,7 @@
  */
 export default class InitMap {
     constructor(props) {
-        const key = props.key || '2fcc7431048d6f52c99d5d8954833dc7';
+        const key = props.key || 'your key';
         this.el = props.el;
         const plugins = [
             'AMap.TruckDriving',
