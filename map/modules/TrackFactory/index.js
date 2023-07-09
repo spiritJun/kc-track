@@ -242,8 +242,13 @@ export default class TrackFactory {
         this.isCorrectEnd = false //最后一次纠偏完成了
         window.setTimeout && clearTimeout(window.setTimeout) //清空所有定时器
         this.map && this.map.clearMap()
+        if(this.props.initPoint){
+            !isResetMap && this.map.setZoomAndCenter(14, this.props.initPoint);//默认定位到皇宫
+        }else{
+            !isResetMap && this.setZoomCenter() //默认定位到皇宫   
+        }
         // this.map.setZoomAndCenter(14, [116.397428, 39.90923]);//默认定位到皇宫
-        !isResetMap && this.setZoomCenter() //默认定位到皇宫
+        
     }
     //实时轨迹开始方法
     //correctType -- (新增 纠偏类型)(2 --两点间 500 --500个点 0--不纠偏)
